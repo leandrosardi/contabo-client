@@ -27,12 +27,16 @@ API_USER = 'leandro@********.com'
 API_PASSWORD = 'SD********fd'
 ```
 
-3. List your Contabo instances.
+3. Start a new Ruby script, requiring `contabo-client` and your `config.rb` file.
 
 ```ruby
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
+```
 
+4. Create a new client in your Ruby script.
+
+```ruby
 # Usage example
 client = ContaboClient.new(
     client_id: CLIENT_ID,
@@ -40,7 +44,11 @@ client = ContaboClient.new(
     api_user: API_USER,
     api_password: API_PASSWORD
 )
+```
 
+5. Get the list of instances in your Contabo account.
+
+```ruby
 ret = client.get_instances
 
 puts JSON.pretty_generate(ret)
@@ -60,21 +68,6 @@ ret['data'].each { |h|
 ## 2. Creating a New Instances
 
 ```ruby
-require_relative '../lib/contabo-client'
-require_relative './config.rb'
-
-# Find the image ID for Ubuntu 20.04
-Z = 100
-ret = client.retrieve_images(size:Z)
-n = ret['_pagination']['totalPages']
-ret = client.retrieve_images(size:n*Z) if n>1
-image = ret['data'].find { |h| h['name'] == 'ubuntu-20.04' }
-raise 'Image not found' if image.nil?
-image_id = image['imageId']
-
-# Create a secret for the root password
-root_password_secret_id = client.create_secret('121124588')
-
 # Create the instance with the retrieved image ID
 instance = client.create_instance(
   image_id: image_id,
@@ -90,19 +83,8 @@ puts JSON.pretty_generate(instance)
 ## 3. Requesting Instance Reinstallation
 
 ```ruby
-require_relative '../lib/contabo-client'
-require_relative './config.rb'
-
 Z = 100
 IP = '84.46.252.181'
-
-# Usage example
-client = ContaboClient.new(
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    api_user: API_USER,
-    api_password: API_PASSWORD
-)
 
 # Find the image ID for Ubuntu 20.04
 ret = client.retrieve_images(size:Z)
@@ -135,19 +117,8 @@ puts JSON.pretty_generate(response)
 ## 3. Requesting Instance Cancelation
 
 ```ruby
-require_relative '../lib/contabo-client'
-require_relative './config.rb'
-
 Z = 100
 IP = '84.46.252.181'
-
-# Usage example
-client = ContaboClient.new(
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    api_user: API_USER,
-    api_password: API_PASSWORD
-)
 
 # Get the instance to resinstall
 ret = client.get_instances
