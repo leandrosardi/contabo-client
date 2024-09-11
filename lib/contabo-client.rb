@@ -42,7 +42,7 @@ class ContaboClient
     request['x-request-id'] = SecureRandom.uuid
   
     body = {
-      name: "Root Password",
+      name: "Ruby's Contabo Client #{SecureRandom.uuid}",
       value: password,
       type: "password"
     }
@@ -52,8 +52,10 @@ class ContaboClient
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-  
-    JSON.parse(response.body)['secretId']
+    
+    data = JSON.parse(response.body)['data'].first
+    raise "Failed to create secret. Error: #{response.body}" if data.nil?
+    data['secretId']
   end  
 
   def retrieve_images(page: 1, size: 10)
@@ -119,4 +121,28 @@ class ContaboClient
     JSON.parse(response.body)
   end
   
+
+  def reinstall_instance(instance_id:, image_id:, root_password:)
+    access_token = get_access_token
+  
+    uri = URI("https://api.contabo.com/v1/compute/instances/#{instance_id}")
+    request = Net::HTTP::Put.new(uri)
+    request['Authorization'] = "Bearer #{access_token}"
+    request['Content-Type'] = 'application/json'
+    request['x-request-id'] = SecureRandom.uuid
+  
+    body = {
+      imageId: image_id,
+      rootPassword: root_password
+    }
+  
+    request.body = body.to_json
+  
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+  
+    JSON.parse(response.body)
+  end
+        
 end
