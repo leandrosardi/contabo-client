@@ -10,10 +10,10 @@ class ContaboClient
     api_user:, 
     api_password:
 )
-    @client_id = 'INT-13297099'
-    @client_secret = 'TPRPdjNw4WB1wzk7kOM4ycyj0a8I6QXN'
-    @api_user = 'hunter.man.woow@gmail.com'
-    @api_password = 'rP51lf3Tn4qLPGXyLzr49kU8qi@'
+    @client_id = CLIENT_ID
+    @client_secret = CLIENT_SECRET
+    @api_user = API_USER
+    @api_password = API_PASSWORD
     @auth_url = 'https://auth.contabo.com/auth/realms/contabo/protocol/openid-connect/token'
     @api_url = 'https://api.contabo.com/v1/compute/instances'
   end

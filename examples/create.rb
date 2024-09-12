@@ -43,7 +43,7 @@ begin
     product_id: 'V45',
     region: 'EU',
     root_password: root_password_secret_id,
-    display_name: 'MyUbuntu20Instance-b'
+    display_name: 'MyUbuntu20Instance-d'
   )
 
   # Print the created instance details
