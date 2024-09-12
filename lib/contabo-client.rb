@@ -4,17 +4,16 @@ require 'uri'
 require 'pry'
 
 class ContaboClient  
-
   def initialize(
     client_id:, 
     client_secret:, 
     api_user:, 
     api_password:
 )
-    @client_id = client_id
-    @client_secret = client_secret
-    @api_user = api_user
-    @api_password = api_password
+    @client_id = 'INT-13297099'
+    @client_secret = 'TPRPdjNw4WB1wzk7kOM4ycyj0a8I6QXN'
+    @api_user = 'hunter.man.woow@gmail.com'
+    @api_password = 'rP51lf3Tn4qLPGXyLzr49kU8qi@'
     @auth_url = 'https://auth.contabo.com/auth/realms/contabo/protocol/openid-connect/token'
     @api_url = 'https://api.contabo.com/v1/compute/instances'
   end
@@ -28,7 +27,6 @@ class ContaboClient
       'password' => @api_password,
       'grant_type' => 'password'
     })
-
     JSON.parse(response.body)['access_token']
   end
 
@@ -143,6 +141,5 @@ class ContaboClient
     end
   
     JSON.parse(response.body)
-  end
-        
+  end        
 end
