@@ -4,7 +4,7 @@ require 'json'
 
 # Constants
 Z = 100
-IP = '84.46.252.181'
+IP = '89.147.102.35'
 
 # Initialize Contabo client
 client = ContaboClient.new(
@@ -54,18 +54,34 @@ begin
 
   # Debug prints to inspect response
   puts "Response from get_instances:"
-  puts JSON.pretty_generate(instances)
+  puts JSON.pretty_generate(instances) unless instances.nil?
 
   # Check for nil response or errors
-  if instances.nil? || instances['error'] || !instances['_pagination'] || instances['data'].nil?
-    puts "Failed to retrieve instances or API returned an error."
-    puts "Response: #{instances.inspect}"
+  if instances.nil?
+    puts "Failed to retrieve instances: Response is nil."
+    exit
+  elsif instances['error']
+    puts "API returned an error: #{instances['error']}"
+    exit
+  elsif !instances['_pagination']
+    puts "Unexpected response structure: '_pagination' key is missing."
+    exit
+  elsif instances['data'].nil?
+    puts "No instances data returned from API."
     exit
   end
 
   # Find the instance ID by IP
-  instance = instances['data'].find { |h| h['ipConfig'] && h['ipConfig']['v4'] && h['ipConfig']['v4']['ip'] == IP }
-  raise 'Instance not found' if instance.nil?
+  instance = instances['data'].find do |h|
+    h['ipConfig'] && h['ipConfig']['v4'] &&
+    h['ipConfig']['v4'].any? { |ip_entry| ip_entry['ip'] == IP }
+  end
+
+  if instance.nil?
+    puts "Instance with IP #{IP} not found."
+    exit
+  end
+
   instance_id = instance['instanceId']
 
   # Request reinstallation

@@ -35,6 +35,7 @@ begin
 
   # Create a secret for the root password
   root_password_secret_id = client.create_secret('121124588')
+  
   puts "root_password_secret_id: #{root_password_secret_id}"
 
   # Create the instance with the retrieved image ID
@@ -43,7 +44,8 @@ begin
     product_id: 'V45',
     region: 'EU',
     root_password: root_password_secret_id,
-    display_name: 'MyUbuntu20Instance-d'
+    display_name: 'MyUbuntu20Instance-test',
+    cloud_init: false
   )
 
   # Print the created instance details
