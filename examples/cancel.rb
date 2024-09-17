@@ -4,7 +4,7 @@ require 'json'
 
 # Constants
 Z = 100
-IP = '157.173.121.209'
+IP = '89.147.102.35'
 
 # Initialize Contabo client
 client = ContaboClient.new(
