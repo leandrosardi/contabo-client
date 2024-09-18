@@ -1,5 +1,5 @@
 require_relative '../lib/contabo-client'
-require_relative '../config.rb'
+require_relative './config.rb'
 require 'json'
 
 # Initialize Contabo client
@@ -10,7 +10,7 @@ client = ContaboClient.new(
   api_password: API_PASSWORD
 )
 
-# Constants
+# Page size.
 Z = 100
 
 # Retrieve images with error handling

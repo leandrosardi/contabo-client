@@ -10,10 +10,10 @@ class ContaboClient
     api_user:, 
     api_password:
 )
-    @client_id = CLIENT_ID
-    @client_secret = CLIENT_SECRET
-    @api_user = API_USER
-    @api_password = API_PASSWORD
+    @client_id = client_id
+    @client_secret = client_secret
+    @api_user = api_user
+    @api_password = api_password
     @auth_url = 'https://auth.contabo.com/auth/realms/contabo/protocol/openid-connect/token'
     @api_url = 'https://api.contabo.com/v1/compute/instances'
   end
@@ -50,11 +50,7 @@ class ContaboClient
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-   
-    # Debugging: Print the full response
-    puts "Response code: #{response.code}"
-    puts "Response body: #{response.body}"
-   
+
     data = JSON.parse(response.body)['data'].first
     raise "Failed to create secret. Error: #{response.body}" if data.nil?
     data['secretId']
@@ -92,7 +88,7 @@ class ContaboClient
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-    puts JSON.parse(response.body)['network']['ipAddress']
+    #JSON.parse(response.body)['network']['ipAddress']
     JSON.parse(response.body)
   end
 

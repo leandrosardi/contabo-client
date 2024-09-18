@@ -1,1 +1,3 @@
-/config.rb
+# ignore any config.rb file, in any directory
+config.rb
+
