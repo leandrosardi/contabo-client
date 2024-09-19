@@ -1,5 +1,5 @@
 require_relative '../lib/contabo-client'
-require_relative '../config.rb'
+require_relative './config.rb'
 require 'json'
 
 # Initialize Contabo client

@@ -1,15 +1,10 @@
 require 'net/http'
 require 'json'
 require 'uri'
-require 'pry'
+require 'securerandom'
 
-class ContaboClient  
-  def initialize(
-    client_id:,
-    client_secret:,
-    api_user:, 
-    api_password:
-)
+class ContaboClient
+  def initialize(client_id:, client_secret:, api_user:, api_password:)
     @client_id = client_id
     @client_secret = client_secret
     @api_user = api_user
@@ -88,34 +83,37 @@ class ContaboClient
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-    #JSON.parse(response.body)['network']['ipAddress']
+
     JSON.parse(response.body)
   end
 
   def create_instance(image_id:, product_id:, region: 'EU', root_password:, display_name:, cloud_init: nil)
     access_token = get_access_token
-  
+
     uri = URI(@api_url)
     request = Net::HTTP::Post.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
     request['Content-Type'] = 'application/json'
     request['x-request-id'] = SecureRandom.uuid
-  
+
+    root_password_secret_id = create_secret(root_password)
+
     body = {
       imageId: image_id,
       productId: product_id,
       region: region,
-      rootPassword: root_password,
+      rootPassword: root_password_secret_id,
+      defaultUser: "root",
       displayName: display_name,
       cloudInit: cloud_init
-    }.compact # Remove nil values if cloudInit is not provided
-  
+    }.compact
+
     request.body = body.to_json
-  
+
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-  
+
     JSON.parse(response.body)
   end
   
@@ -138,28 +136,24 @@ class ContaboClient
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-  
-    def cancel_instance(instance_id:)
-      # Construct the URL for the cancellation request
-      url = "#{@base_url}/instances/#{instance_id}"
-  
-      # Send the DELETE request
-      response = RestClient.delete(
-        url,
-        {
-          Authorization: "Bearer #{get_access_token}",
-          accept: :json
-        }
-      )
-  
-      # Parse the response
-      JSON.parse(response.body)
-    rescue RestClient::ExceptionWithResponse => e
-      # Handle any API errors gracefully
-      puts "Error canceling instance: #{e.response}"
-      JSON.parse(e.response.body) # Optional: Parse and return error details
-    end
-    
+
     JSON.parse(response.body)
-  end        
+  end
+  
+  def cancel_instance(instance_id:)
+    access_token = get_access_token
+    uri = URI("#{@api_url}/#{instance_id}")
+    request = Net::HTTP::Delete.new(uri)
+    request['Authorization'] = "Bearer #{access_token}"
+    request['x-request-id'] = SecureRandom.uuid
+  
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+
+    JSON.parse(response.body)
+  rescue StandardError => e
+    puts "Error canceling instance: #{e.message}"
+    nil
+  end
 end

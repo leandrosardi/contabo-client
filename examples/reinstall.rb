@@ -1,10 +1,10 @@
 require_relative '../lib/contabo-client'
-require_relative '../config.rb'
+require_relative './config.rb'
 require 'json'
 
 # Constants
 Z = 100
-IP = '89.147.102.35'
+IP = '38.242.149.151'
 
 # Initialize Contabo client
 client = ContaboClient.new(
