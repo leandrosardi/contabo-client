@@ -1,10 +1,11 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
 require 'json'
+require 'pry'  # Add this line to require pry
 
 # Constants
 Z = 100
-IP = '38.242.149.151'
+IP = '184.174.34.33'
 
 # Initialize Contabo client
 client = ContaboClient.new(
@@ -19,13 +20,11 @@ begin
   ret = client.retrieve_images(size: Z)
 
   # Debug prints to inspect response
-  puts "Response from retrieve_images:"
-  puts JSON.pretty_generate(ret)
+  binding.pry  # Use this to inspect the `ret` variable
 
   # Check for nil response or errors
   if ret.nil? || ret['error'] || !ret['_pagination']
-    puts "Failed to retrieve images or API returned an error."
-    puts "Response: #{ret.inspect}"
+    binding.pry  # Use this to inspect the error case
     exit
   end
 
@@ -36,7 +35,7 @@ begin
 
   # Handle cases where no data is returned
   if ret['data'].nil? || ret['data'].empty?
-    puts "No images returned from API."
+    binding.pry  # Use this to inspect the no data case
     exit
   end
 
@@ -47,38 +46,42 @@ begin
 
   # Create a secret for the root password (you should have a method to generate or retrieve a valid secret)
   root_password_secret_id = client.create_secret('NewRootPassword123')
-  puts "root_password_secret_id: #{root_password_secret_id}"
+  binding.pry  # Use this to inspect the root_password_secret_id
 
   # Retrieve instances
   instances = client.get_instances
 
   # Debug prints to inspect response
-  puts "Response from get_instances:"
-  puts JSON.pretty_generate(instances) unless instances.nil?
+  binding.pry  # Use this to inspect the `instances` variable
 
   # Check for nil response or errors
   if instances.nil?
-    puts "Failed to retrieve instances: Response is nil."
+    binding.pry  # Use this to inspect the nil response case
     exit
   elsif instances['error']
-    puts "API returned an error: #{instances['error']}"
+    binding.pry  # Use this to inspect the API error case
     exit
   elsif !instances['_pagination']
-    puts "Unexpected response structure: '_pagination' key is missing."
+    binding.pry  # Use this to inspect unexpected response structure
     exit
   elsif instances['data'].nil?
-    puts "No instances data returned from API."
+    binding.pry  # Use this to inspect the no instances data case
     exit
   end
 
   # Find the instance ID by IP
   instance = instances['data'].find do |h|
-    h['ipConfig'] && h['ipConfig']['v4'] &&
-    h['ipConfig']['v4'].any? { |ip_entry| ip_entry['ip'] == IP }
+    ip_config_v4 = h.dig('ipConfig', 'v4')
+    
+    # Debug print to check the structure of 'v4'
+    binding.pry  # Use this to inspect ip_config_v4
+
+    # Directly compare if 'v4' is a hash
+    ip_config_v4.is_a?(Hash) && ip_config_v4['ip'] == IP
   end
 
   if instance.nil?
-    puts "Instance with IP #{IP} not found."
+    binding.pry  # Use this to inspect the instance not found case
     exit
   end
 
@@ -88,12 +91,12 @@ begin
   response = client.reinstall_instance(
     instance_id: instance_id,
     image_id: image_id,
-    root_password: root_password_secret_id
+    root_password: 'NewRootPassword123',
+    user_data: "#cloud-config\n{}"
   )
 
   # Print the response
-  puts "Reinstallation response:"
-  puts JSON.pretty_generate(response)
+  binding.pry  # Use this to inspect the reinstallation response
 
 rescue StandardError => e
   puts "An error occurred: #{e.message}"

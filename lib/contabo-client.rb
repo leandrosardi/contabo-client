@@ -87,7 +87,7 @@ class ContaboClient
     JSON.parse(response.body)
   end
 
-  def create_instance(image_id:, product_id:, region: 'EU', root_password:, display_name:, cloud_init: nil)
+  def create_instance(image_id:, product_id:, region: 'EU', root_password:, display_name:, user_data: '')
     access_token = get_access_token
 
     uri = URI(@api_url)
@@ -105,7 +105,7 @@ class ContaboClient
       rootPassword: root_password_secret_id,
       defaultUser: "root",
       displayName: display_name,
-      cloudInit: cloud_init
+      userData: user_data
     }.compact
 
     request.body = body.to_json
@@ -117,7 +117,7 @@ class ContaboClient
     JSON.parse(response.body)
   end
   
-  def reinstall_instance(instance_id:, image_id:, root_password:)
+  def reinstall_instance(instance_id:, image_id:, root_password:, cloud_init: nil, user_data: '')
     access_token = get_access_token
   
     uri = URI("https://api.contabo.com/v1/compute/instances/#{instance_id}")
@@ -125,11 +125,14 @@ class ContaboClient
     request['Authorization'] = "Bearer #{access_token}"
     request['Content-Type'] = 'application/json'
     request['x-request-id'] = SecureRandom.uuid
-  
+    root_password_secret_id = create_secret(root_password)
+
     body = {
       imageId: image_id,
-      rootPassword: root_password
-    }
+      rootPassword: root_password_secret_id,
+      defaultUser: "root",
+      userData: user_data
+  }.compact
   
     request.body = body.to_json
   

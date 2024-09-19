@@ -33,7 +33,7 @@ begin
     region: 'EU',  
     root_password: root_password,  
     display_name: 'MyUbuntu20Instance-root-access-1',  
-    cloud_init: false  
+    user_data: "#cloud-config\n"  
   )  
   
   # Replace puts with binding.pry to inspect the instance details  
