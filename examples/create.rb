@@ -26,6 +26,15 @@ begin
   # Set the root password directly here  
   root_password = '121124588'  
 
+  user_data_script = <<~USER_DATA
+    #cloud-config
+    disable_cloud_init: true
+    runcmd:
+      - touch /etc/cloud/cloud-init.disabled
+      - systemctl stop cloud-init
+      - systemctl disable cloud-init
+  USER_DATA
+
   # Create the instance with the retrieved image ID  
   instance = client.create_instance(  
     image_id: image_id,  
@@ -33,7 +42,7 @@ begin
     region: 'EU',  
     root_password: root_password,  
     display_name: 'MyUbuntu20Instance-root-access-1',  
-    user_data: "#cloud-config\n"  
+    user_data: user_data_script  
   )  
   
   # Replace puts with binding.pry to inspect the instance details  

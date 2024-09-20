@@ -126,7 +126,7 @@ class ContaboClient
     request['Content-Type'] = 'application/json'
     request['x-request-id'] = SecureRandom.uuid
     root_password_secret_id = create_secret(root_password)
-
+    
     body = {
       imageId: image_id,
       rootPassword: root_password_secret_id,
