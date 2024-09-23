@@ -132,7 +132,7 @@ class ContaboClient
       rootPassword: root_password_secret_id,
       defaultUser: "root",
       userData: user_data
-  }.compact
+    }.compact
   
     request.body = body.to_json
   

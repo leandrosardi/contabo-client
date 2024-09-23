@@ -34,7 +34,7 @@ begin
       - systemctl stop cloud-init
       - systemctl disable cloud-init
   USER_DATA
-
+binding.pry
   # Create the instance with the retrieved image ID  
   instance = client.create_instance(  
     image_id: image_id,  
@@ -45,9 +45,6 @@ begin
     user_data: user_data_script  
   )  
   
-  # Replace puts with binding.pry to inspect the instance details  
-  binding.pry  
-
   # Output the created instance details  
   # Commented out since we're using binding.pry for debugging  
   # puts JSON.pretty_generate(instance)  
