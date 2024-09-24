@@ -16,7 +16,7 @@ client = ContaboClient.new(
 
 begin
   # Retrieve instances
-  instances = client.get_instances
+  instances = client.get_instances(search: IP)
 
   # Debug prints to inspect response
   puts "Response from get_instances:"
@@ -39,10 +39,16 @@ begin
     exit
   end
 
+  unless instances['data'].any?
+    puts "No instances found"
+    exit
+  end
+
   # Find the instance ID by IP
-  instance = instances['data'].find do |h| 
-    h['ipConfig'] && h['ipConfig']['v4'] &&
-    h['ipConfig']['v4'].any? { |ip_entry| ip_entry['ip'] == IP }
+  instance = instances['data'].find do |h|
+    ip_config_v4 = h.dig('ipConfig', 'v4')
+
+    ip_config_v4.is_a?(Hash) && ip_config_v4['ip'] == IP
   end
 
   if instance.nil?
