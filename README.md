@@ -59,6 +59,10 @@ client = ContaboClient.new(
 ## Creating an Instance
 
 ```ruby
+require 'blackstack-core'
+require 'colorize'
+require 'json'  
+
 begin
   # Retrieve images
   images = client.retrieve_images(size: 100)
@@ -104,6 +108,10 @@ end
 ## Cancelling an Instance
 
 ```ruby
+require 'blackstack-core'
+require 'colorize'
+require 'json'  
+
 begin
   # Define the IP of the instance to cancel
   target_ip = '62.84.178.201'
@@ -132,6 +140,10 @@ end
 ## Reinstalling an Instance
 
 ```ruby
+require 'blackstack-core'
+require 'colorize'
+require 'json'  
+
 begin
   # Define the IP of the instance to reinstall
   target_ip = '62.84.178.201'
