@@ -24,7 +24,10 @@ begin
   image_id = image['imageId']  
 
   # Set the root password directly here  
-  root_password = '121124588'  
+  root_password = '121124588'
+  # use the following command to generate ssh key
+  # ssh-keygen -t ed25519 -b 4096 -C "your_email_here" -f "key_name_here"
+  ssh_rsa = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPfaX2P18lDbtoZsGC6fcqw7zoAbbNyGlrUI004QCe7 schaudhry722@gmail.com"
 
   user_data_script = <<~USER_DATA
     #cloud-config
@@ -34,20 +37,20 @@ begin
       - systemctl stop cloud-init
       - systemctl disable cloud-init
   USER_DATA
-binding.pry
   # Create the instance with the retrieved image ID  
   instance = client.create_instance(  
     image_id: image_id,  
     product_id: 'V45',  
-    region: 'EU',  
+    region: 'EU',
+    ssh_rsa: ssh_rsa,
     root_password: root_password,  
-    display_name: 'MyUbuntu20Instance-root-access-1',  
+    display_name: 'MyUbuntu20Instance-root-access-1',
     user_data: user_data_script  
   )  
   
   # Output the created instance details  
   # Commented out since we're using binding.pry for debugging  
-  # puts JSON.pretty_generate(instance)  
+  puts JSON.pretty_generate(instance)
 
 rescue StandardError => e  
   puts "An error occurred: #{e.message}"  

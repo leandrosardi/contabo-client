@@ -17,52 +17,26 @@ client = ContaboClient.new(
 )
 
 begin
-  # Retrieve images
-  ret = client.retrieve_images(size: Z)
+  # get filtered instance with IP
+  instances = client.get_instances(search: IP)
 
-  # Check for nil response or errors
-  if ret.nil? || ret['error'] || !ret['_pagination']
-    raise "Inspect error case in retrieve_images"
+  if instances['error']
+    raise "API returned an error: #{instances['error']}"
   end
 
-  n = ret['_pagination']['totalPages']
-  if n > 1
-    ret = client.retrieve_images(size: n * Z)
+  # if API does not return any instance
+  if instances['data'].nil? || !instances['data'].is_a?(Array)
+    raise "No instances returned or unexpected data format. Response: #{instances.inspect}"
   end
 
-  # Handle cases where no data is returned
-  if ret['data'].nil? || ret['data'].empty?
-    raise "Inspect no data case from API response"
-  end
-
-  # Find the image ID for Ubuntu 20.04
-  image = ret['data'].find { |h| h['name'] == 'ubuntu-20.04' }
-  raise 'Image not found' if image.nil?
-  image_id = image['imageId']
-  
-  # Retrieve instances
-  instances = client.get_instances
-  n = instances['_pagination']['totalPages']
-  if n > 1
-    ret = client.get_instances(size: n * Z)
-  end
-
-  # Check for nil response or errors
-  if instances.nil?
-    raise "Inspect the nil response case for instances"
-  elsif instances['error']
-    raise "Inspect the API error case"
-  elsif !instances['_pagination']
-    raise "Inspect unexpected response structure"
-  elsif instances['data'].nil?
-    raise "Inspect the no instances data case"
+  unless instances['data'].any?
+    raise "No instances found"
   end
 
   # Find the instance ID by IP
   instance = instances['data'].find do |h|
     ip_config_v4 = h.dig('ipConfig', 'v4')
 
-    # Directly compare if 'v4' is a hash
     ip_config_v4.is_a?(Hash) && ip_config_v4['ip'] == IP
   end
 
@@ -70,6 +44,10 @@ begin
     raise "Inspect the case where the instance is not found"
   end
 
+  image_id = instance['imageId']
+  
+  raise 'Image not found' if image_id.nil?
+  
   instance_id = instance['instanceId']
 
   user_data_script = <<~USER_DATA
@@ -92,6 +70,6 @@ begin
   exit(0)
 
 rescue => e
-  STDERR.puts e.to_console.red
+  STDERR.puts e.message.red
   exit(1)
 end
