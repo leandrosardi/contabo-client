@@ -1,3 +1,5 @@
+![Gem version](https://img.shields.io/gem/v/contabo-client) ![Gem downloads](https://img.shields.io/gem/dt/contabo-client)
+
 # ContaboClient Ruby Library
 
 A Ruby library for managing Contabo instances programmatically. Easily create, cancel, and reinstall Contabo instances directly from your Ruby applications.
