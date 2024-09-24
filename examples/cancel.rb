@@ -1,10 +1,11 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
+require 'blackstack-core'
 require 'json'
 
 # Constants
 Z = 100
-IP = '89.147.102.35'
+IP = '84.247.141.169'
 
 # Initialize Contabo client
 client = ContaboClient.new(
@@ -16,10 +17,10 @@ client = ContaboClient.new(
 
 begin
   # Retrieve instances
-  instances = client.get_instances(search: IP)
+  instances = client.get_instances(size: Z)
 
   # Debug prints to inspect response
-  puts "Response from get_instances:"
+  #puts "Response from get_instances:"
   if instances.nil?
     puts "Received nil response from get_instances."
     exit
@@ -62,7 +63,7 @@ begin
   # Debug: Print the instance details
   puts "Found instance with IP #{IP}:"
   puts JSON.pretty_generate(instance)
-
+binding.pry
   # Request cancellation
   response = client.cancel_instance(instance_id: instance_id)
 
@@ -75,6 +76,5 @@ begin
   end
 
 rescue StandardError => e
-  puts "An error occurred: #{e.message}"
-  puts e.backtrace
+  STDERR.puts "An error occurred: #{e.to_console}".red  
 end

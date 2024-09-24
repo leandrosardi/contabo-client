@@ -1,5 +1,6 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
+require 'blackstack-core'
 require 'json'
 
 # Initialize Contabo client
@@ -37,6 +38,5 @@ begin
   end
 
 rescue StandardError => e
-  puts "An error occurred: #{e.message}"
-  puts e.backtrace
+  STDERR.puts "An error occurred: #{e.to_console}".red  
 end

@@ -1,5 +1,6 @@
 require_relative '../lib/contabo-client'  
 require_relative './config.rb'  
+require 'blackstack-core'
 require 'json'  
 require 'pry'  
 
@@ -24,10 +25,7 @@ begin
   image_id = image['imageId']  
 
   # Set the root password directly here  
-  root_password = '121124588'
-  # use the following command to generate ssh key
-  # ssh-keygen -t ed25519 -b 4096 -C "your_email_here" -f "key_name_here"
-  ssh_rsa = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPfaX2P18lDbtoZsGC6fcqw7zoAbbNyGlrUI004QCe7 schaudhry722@gmail.com"
+  root_password = 'HGT121124588ABC'
 
   user_data_script = <<~USER_DATA
     #cloud-config
@@ -42,9 +40,8 @@ begin
     image_id: image_id,  
     product_id: 'V45',  
     region: 'EU',
-    ssh_rsa: ssh_rsa,
     root_password: root_password,  
-    display_name: 'MyUbuntu20Instance-root-access-1',
+    display_name: 'MyUbuntu20Instance-root-access-5',
     user_data: user_data_script  
   )  
   
@@ -53,6 +50,5 @@ begin
   puts JSON.pretty_generate(instance)
 
 rescue StandardError => e  
-  puts "An error occurred: #{e.message}"  
-  puts e.backtrace  
+  STDERR.puts "An error occurred: #{e.to_console}".red  
 end

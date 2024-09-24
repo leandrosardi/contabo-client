@@ -1,12 +1,13 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
+require 'blackstack-core'
 require 'json'
 require 'colorize'
 require 'pry'  # Add pry for debugging
 
 # Constants
 Z = 100
-IP = '84.247.141.169'
+IP = '62.84.178.201'
 
 # Initialize Contabo client
 client = ContaboClient.new(
@@ -18,7 +19,10 @@ client = ContaboClient.new(
 
 begin
   # get filtered instance with IP
-  instances = client.get_instances(search: IP)
+  instances = client.get_instances(size: Z)
+  
+  # aux
+  total_pages = instances['_pagination']['totalPages']
 
   if instances['error']
     raise "API returned an error: #{instances['error']}"
@@ -70,6 +74,5 @@ begin
   exit(0)
 
 rescue => e
-  STDERR.puts e.message.red
-  exit(1)
+  STDERR.puts "An error occurred: #{e.to_console}".red  
 end
