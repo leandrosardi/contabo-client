@@ -25,10 +25,9 @@ class ContaboClient
     JSON.parse(response.body)['access_token']
   end
 
-  def create_secret(password)
-    access_token = get_access_token
-  
+  def create_secret(password, type = 'password')
     uri = URI('https://api.contabo.com/v1/secrets')
+
     request = Net::HTTP::Post.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
     request['Content-Type'] = 'application/json'
@@ -37,7 +36,7 @@ class ContaboClient
     body = {
       name: "Ruby's Contabo Client #{SecureRandom.uuid}",
       value: password,
-      type: "password"
+      type: type
     }
   
     request.body = body.to_json
@@ -52,7 +51,6 @@ class ContaboClient
   end
 
   def retrieve_images(page: 1, size: 10)
-    access_token = get_access_token
     uri = URI('https://api.contabo.com/v1/compute/images')
     params = { page: page, size: size }
     uri.query = URI.encode_www_form(params)
@@ -68,16 +66,16 @@ class ContaboClient
     JSON.parse(response.body)
   end
   
-  def get_instances(page: 1, size: 10, order_by: nil)
-    access_token = get_access_token
-
+  def get_instances(page: 1, size: 10, order_by: nil, search: nil)
     uri = URI(@api_url)
     params = { page: page, size: size }
     params[:orderBy] = order_by if order_by
+    params[:search] = search if search
     uri.query = URI.encode_www_form(params)
 
     request = Net::HTTP::Get.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
+    request['x-request-id'] = SecureRandom.uuid
     request['x-request-id'] = SecureRandom.uuid
 
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
@@ -87,9 +85,7 @@ class ContaboClient
     JSON.parse(response.body)
   end
 
-  def create_instance(image_id:, product_id:, region: 'EU', root_password:, display_name:, user_data: '')
-    access_token = get_access_token
-
+  def create_instance(image_id:, product_id:, region: 'EU', ssh_rsa:, root_password:, display_name:, user_data: '')
     uri = URI(@api_url)
     request = Net::HTTP::Post.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
@@ -97,11 +93,13 @@ class ContaboClient
     request['x-request-id'] = SecureRandom.uuid
 
     root_password_secret_id = create_secret(root_password)
+    root_ssh_secret_id = create_secret(ssh_rsa, 'ssh')
 
     body = {
       imageId: image_id,
       productId: product_id,
       region: region,
+      sshKeys: [root_ssh_secret_id],
       rootPassword: root_password_secret_id,
       defaultUser: "root",
       displayName: display_name,
@@ -118,8 +116,6 @@ class ContaboClient
   end
   
   def reinstall_instance(instance_id:, image_id:, root_password:, cloud_init: nil, user_data: '')
-    access_token = get_access_token
-  
     uri = URI("https://api.contabo.com/v1/compute/instances/#{instance_id}")
     request = Net::HTTP::Put.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
@@ -142,11 +138,14 @@ class ContaboClient
 
     JSON.parse(response.body)
   end
+
+  def access_token
+    @access_token ||= get_access_token
+  end
   
   def cancel_instance(instance_id:)
-    access_token = get_access_token
-    uri = URI("#{@api_url}/#{instance_id}")
-    request = Net::HTTP::Delete.new(uri)
+    uri = URI("#{@api_url}/#{instance_id}/cancel")
+    request = Net::HTTP::Post.new(uri)
     request['Authorization'] = "Bearer #{access_token}"
     request['x-request-id'] = SecureRandom.uuid
   
