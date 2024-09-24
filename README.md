@@ -1,135 +1,187 @@
-**THIS PROJECT IS UNDER CONSTRUCTION**
+# ContaboClient Ruby Library
 
-# Contabo Client
+A Ruby library for managing Contabo instances programmatically. Easily create, cancel, and reinstall Contabo instances directly from your Ruby applications.
 
-Ruby gem for performing some infrastructure operations on Contabo via API
+## Features
 
-## 1. Getting Started
+- **Instance Creation:** Programmatically create new Contabo instances with custom configurations.
 
-1. Get your Contabo credentials.
+- **Instance Cancellation:** Cancel existing Contabo instances.
 
-Refer to [this article](https://api.contabo.com/#section/Introduction/Getting-Started) about how to get your Contabo credentials.
+- **Instance Reinstallation:** Reinstall operating systems on existing instances.
 
-2. Install **Contabo Client**:
+- **Secure Secret Management:** Automatically handle SSH keys and root passwords securely.
+
+## Installation
 
 ```
 gem install contabo-client
 ```
 
-3. Write your Contabo credentials into a `config.rb` file.
+## Configuration
 
-Note that `config.rb` is included in the `.gitignore` file of this project, in order to never push your secrets to a public repository
+Before using the `ContaboClient`, you need to set up your Contabo API credentials. 
+
+1. Refer to [this article](https://api.contabo.com/#section/Introduction/Getting-Started) about how to get your Contabo credentials.
+
+2. Create a `config.rb`` file in your project with the following content:
 
 ```ruby
-CLIENT_ID = 'INT-**********'
-CLIENT_SECRET = 'Sb****************'
-API_USER = 'leandro@********.com'
-API_PASSWORD = 'SD********fd'
+# config.rb
+
+CLIENT_ID = 'your_contabo_client_id'
+CLIENT_SECRET = 'your_contabo_client_secret'
+API_USER = 'your_contabo_api_username'
+API_PASSWORD = 'your_contabo_api_password'
 ```
 
-3. Start a new Ruby script, requiring `contabo-client` and your `config.rb` file.
+**Note:** Replace the placeholder values with your actual Contabo API credentials. Ensure that this file is kept secure and is not committed to version control systems.
+
+## Usage
+
+Require the library and your configuration:
 
 ```ruby
-require_relative '../lib/contabo-client'
+require 'contabo-client'
 require_relative './config.rb'
-```
 
-4. Create a new client in your Ruby script.
-
-```ruby
-# Usage example
+# Initialize Contabo client
 client = ContaboClient.new(
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    api_user: API_USER,
-    api_password: API_PASSWORD
+  client_id: CLIENT_ID,
+  client_secret: CLIENT_SECRET,
+  api_user: API_USER,
+  api_password: API_PASSWORD
 )
 ```
 
-5. Get the list of instances in your Contabo account.
+## Creating an Instance
 
 ```ruby
-ret = client.get_instances
+begin
+  # Retrieve images
+  images = client.retrieve_images(size: 100)
+  raise "No images found" unless images['data']
 
-puts JSON.pretty_generate(ret)
+  # Select an image
+  image = images['data'].find { |img| img['name'] == 'ubuntu-20.04' }
+  raise 'Image not found' if image.nil?
 
-puts ret['data'].size
-puts ret['_pagination']['totalPages']
+  image_id = image['imageId']
 
-ret['data'].each { |h|
-    puts '----'
-    puts h['name']
-    puts h['productId']
-    puts h['imageId']
-    puts h['ipConfig']['v4']['ip']
-}
+  # Define instance parameters
+  root_password = 'YourSecurePassword123!'
+  ssh_rsa = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPfaX2P18lDbtoZsGC6fcqw7zoAbbNyGlrUI004QCe7 your_email@example.com"
+  user_data_script = <<~USER_DATA
+    #cloud-config
+    disable_cloud_init: true
+    runcmd:
+      - touch /etc/cloud/cloud-init.disabled
+      - systemctl stop cloud-init
+      - systemctl disable cloud-init
+  USER_DATA
+
+  # Create the instance
+  instance = client.create_instance(
+    image_id: image_id,
+    product_id: 'V45',
+    region: 'EU',
+    ssh_rsa: ssh_rsa,
+    root_password: root_password,
+    display_name: 'MyUbuntu20Instance',
+    user_data: user_data_script
+  )
+
+  puts "Instance created successfully:"
+  puts JSON.pretty_generate(instance)
+
+rescue StandardError => e
+  STDERR.puts "An error occurred: #{e.message}"
+end
 ```
 
-## 2. Creating a New Instances
+## Cancelling an Instance
 
 ```ruby
-# Create the instance with the retrieved image ID
-instance = client.create_instance(
-  image_id: image_id,
-  product_id: 'V45',
-  region: 'EU',
-  root_password: root_password_secret_id,
-  display_name: 'MyUbuntu20Instance'
-)
+begin
+  # Define the IP of the instance to cancel
+  target_ip = '62.84.178.201'
 
-puts JSON.pretty_generate(instance)
+  # Retrieve instances
+  instances = client.get_instances(size: 100)
+  raise "Failed to retrieve instances" if instances.nil?
+
+  # Find the target instance by IP
+  instance = instances['data'].find do |inst|
+    inst.dig('ipConfig', 'v4', 'ip') == target_ip
+  end
+
+  raise "Instance with IP #{target_ip} not found" if instance.nil?
+
+  # Cancel the instance
+  response = client.cancel_instance(instance_id: instance['instanceId'])
+  puts "Cancellation response:"
+  puts JSON.pretty_generate(response)
+
+rescue StandardError => e
+  STDERR.puts "An error occurred: #{e.message}"
+end
 ```
 
-## 3. Requesting Instance Reinstallation
+## Reinstalling an Instance
 
 ```ruby
-Z = 100
-IP = '84.46.252.181'
+begin
+  # Define the IP of the instance to reinstall
+  target_ip = '62.84.178.201'
 
-# Find the image ID for Ubuntu 20.04
-ret = client.retrieve_images(size:Z)
-n = ret['_pagination']['totalPages']
-ret = client.retrieve_images(size:n*Z) if n>1
-image = ret['data'].find { |h| h['name'] == 'ubuntu-20.04' }
-raise 'Image not found' if image.nil?
-image_id = image['imageId']
+  # Retrieve instances
+  instances = client.get_instances(size: 100)
+  raise "Failed to retrieve instances" if instances.nil?
 
-# Create a secret for the root password (this step is assumed)
-root_password_secret_id = client.create_secret('NewRootPassword123')
-puts "root_password_secret_id: #{root_password_secret_id}"
+  # Find the target instance by IP
+  instance = instances['data'].find do |inst|
+    inst.dig('ipConfig', 'v4', 'ip') == target_ip
+  end
 
-# Get the instance to resinstall
-ret = client.get_instances
-n = ret['_pagination']['totalPages']
-ret = client.retrieve_images(size:n*Z) if n>1
-instance_id = ret['data'].find { |h| h['ipConfig']['v4']['ip'] == IP }['instanceId']
+  raise "Instance with IP #{target_ip} not found" if instance.nil?
 
-# request reinstallation
-response = client.reinstall_instance(
-  instance_id: instance_id, 
-  image_id: image_id, 
-  root_password: root_password_secret_id
-)
+  # Define reinstallation parameters
+  new_image_id = 'new_image_id_here' # Replace with the desired image ID
+  new_root_password = 'NewSecurePassword123!'
+  user_data_script = '' # Optional user data
 
-puts JSON.pretty_generate(response)
+  # Reinstall the instance
+  response = client.reinstall_instance(
+    instance_id: instance['instanceId'],
+    image_id: new_image_id,
+    root_password: new_root_password,
+    user_data: user_data_script
+  )
+
+  puts "Reinstallation response:"
+  puts JSON.pretty_generate(response)
+
+rescue StandardError => e
+  STDERR.puts "An error occurred: #{e.message}"
+end
 ```
 
-## 3. Requesting Instance Cancelation
+## Contributing
 
-```ruby
-Z = 100
-IP = '84.46.252.181'
+Contributions are welcome! Please follow these steps:
 
-# Get the instance to resinstall
-ret = client.get_instances
-n = ret['_pagination']['totalPages']
-ret = client.retrieve_images(size:n*Z) if n>1
-instance_id = ret['data'].find { |h| h['ipConfig']['v4']['ip'] == IP }['instanceId']
+1. Fork the repository.
+2. Create a new feature branch (`git checkout -b feature/YourFeature`).
+3. Commit your changes (`git commit -m 'Add some feature'`).
+4. Push to the branch (`git push origin feature/YourFeature`).
+5. Open a Pull Request.
 
-# request reinstallation
-response = client.cancel_instance(
-  instance_id: instance_id
-)
+Please ensure your code adheres to the existing style and includes appropriate tests.
 
-puts JSON.pretty_generate(response)
-```
+## License
+
+This project is licensed under the [MIT License](/LICENSE).
+
+## Support
+
+For any questions or support, please open an issue on the [GitHub repository](https://github.com/leandrosardi/contabo-client) or contact the maintainer at [leandro@massprospecting.com](leandro@massprospecting.com).
