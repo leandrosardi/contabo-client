@@ -1,6 +1,7 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
 require 'blackstack-core'
+require 'colorize'
 require 'json'
 require 'colorize'
 require 'pry'  # Add pry for debugging
@@ -67,7 +68,7 @@ begin
   response = client.reinstall_instance(
     instance_id: instance_id,
     image_id: image_id,
-    root_password: 'NewRootPassword123',
+    root_password: 'PedroPicaPiedra5353', #'NewRootPassword123',
     user_data: user_data_script
   )
 

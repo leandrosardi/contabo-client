@@ -1,6 +1,7 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
 require 'blackstack-core'
+require 'colorize'
 require 'json'
 
 # Initialize Contabo client

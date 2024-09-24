@@ -1,11 +1,12 @@
 require_relative '../lib/contabo-client'
 require_relative './config.rb'
 require 'blackstack-core'
+require 'colorize'
 require 'json'
 
 # Constants
 Z = 100
-IP = '84.247.141.169'
+IP = '62.84.178.201'
 
 # Initialize Contabo client
 client = ContaboClient.new(
@@ -61,9 +62,9 @@ begin
   instance_id = instance['instanceId']
 
   # Debug: Print the instance details
-  puts "Found instance with IP #{IP}:"
-  puts JSON.pretty_generate(instance)
-binding.pry
+  puts "Found instance with IP #{IP}"
+  #puts JSON.pretty_generate(instance)
+
   # Request cancellation
   response = client.cancel_instance(instance_id: instance_id)
 
